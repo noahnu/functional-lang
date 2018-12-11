@@ -1,5 +1,1 @@
-(def double = x -> 2 * x);
-(
-    (def fn = (if (x > 3)));
-    fn (double 3)
-)
+(add 1 2)

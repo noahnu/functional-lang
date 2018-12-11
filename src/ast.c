@@ -207,6 +207,7 @@ AST_NODE* ast_parse_expression(AST_PARSER *parser, TOKEN *initial_token)
 
     TOKEN *peak_node = peak_next_token(parser);
     if (peak_node != NULL && peak_node->type == TK_OPERATOR) {
+        // <child_expression> <Operator> <Expression>
         const char *operator = (const char *) get_next_token(parser)->value;
         AST_NODE *node_operation = ast_allocate_node(AST_T_INFIX_OPERATION);
         node_operation->value = ast_allocate_node_value_from_str(operator);
@@ -214,11 +215,18 @@ AST_NODE* ast_parse_expression(AST_PARSER *parser, TOKEN *initial_token)
         node_operation->right = ast_parse_expression(parser, get_next_token(parser));
         node_expression->left = node_operation;
     } else if (peak_node != NULL && peak_node->type == TK_SEQUENCE) {
+        // <child_expression> <Sequence> <Expression>
         get_next_token(parser);
         AST_NODE *node_sequence = ast_allocate_node(AST_T_SEQUENCE);
         node_sequence->left = child_expression;
         node_sequence->right = ast_parse_expression(parser, get_next_token(parser));
         node_expression->left = node_sequence;
+    } else if (peak_node != NULL && AST_TOKEN_STARTS_EXPRESSION(peak_node)) {
+        // <child_expression> <expression>
+        AST_NODE *node_call = ast_allocate_node(AST_T_CALL);
+        node_call->left = child_expression;
+        node_call->right = ast_parse_expression(parser, get_next_token(parser));
+        node_expression->left = node_call;
     } else {
         // Collapse expression nodes if possible.
         if (child_expression->type == AST_T_EXPRESSION) {

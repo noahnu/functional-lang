@@ -17,8 +17,8 @@ Expression ::
     | <Sequence>
     | <Infix_Operation>
 
-Call :: 
-    | <Identifier> <Expression>
+Call ::
+    | <Expression> <Expression>
 
 Infix_Operation ::
     | <Expression> <Operator> <Expression>
