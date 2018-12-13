@@ -57,16 +57,12 @@ int CHAR_IS_COMMENT_START(char c) {
     return c == '#';
 }
 
-int CHAR_IS_SEQUENCE(char c) {
-    return c == ';';
-}
-
 int INCLUDE_TOKEN_BOUNDARY_IN_VALUE(TOKEN_TYPE type) {
     return type != TK_STRING && type != TK_LINE_COMMENT;
 }
 
 int TOKEN_TYPE_SUPPORTS_VALUE(TOKEN_TYPE type) {
-    return type != TK_PAREN_OPEN && type != TK_PAREN_CLOSE && type != TK_SEQUENCE;
+    return type != TK_PAREN_OPEN && type != TK_PAREN_CLOSE;
 }
 
 int TOKEN_LACKS_SEMANTIC_MEANING(TOKEN_TYPE token_type)
@@ -91,7 +87,6 @@ TOKEN_TYPE tokenizer_identify_by_leading_char(uint8_t c)
     if (CHAR_IS_STRING_DELIMITER(c)) return TK_STRING;
     if (CHAR_IS_OPERATOR(c)) return TK_OPERATOR;
     if (CHAR_IS_DIGIT(c)) return TK_NUMERIC;
-    if (CHAR_IS_SEQUENCE(c)) return TK_SEQUENCE;
     if (CHAR_IS_VALID_IDENTIFIER_SYMBOL(c) || CHAR_IS_LETTER(c)) {
         return TK_IDENTIFIER;
     }
@@ -155,8 +150,6 @@ char *tokenizer_token_type_to_name(TOKEN_TYPE type)
             return strdup("OPERATOR");
         case TK_NUMERIC:
             return strdup("NUMERIC");
-        case TK_SEQUENCE:
-            return strdup("SEQUENCE");
         default:
             return strdup("UNKNOWN TYPE");
     }
@@ -168,8 +161,6 @@ char *tokenizer_token_value_to_str(TOKEN_TYPE type, uint8_t *value)
     switch (type) {
         case TK_NEWLINE:
             return strdup("<NEWLINE>");
-        case TK_SEQUENCE:
-            return strdup("<SEQUENCE>");
         case TK_STRING:
         case TK_IDENTIFIER:
         case TK_OPERATOR:

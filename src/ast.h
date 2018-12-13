@@ -8,12 +8,11 @@
 
 typedef enum {
     AST_T_EXPRESSION,
-    AST_T_INFIX_OPERATION,
     AST_T_NUMERIC,
     AST_T_STRING,
     AST_T_CALL,
     AST_T_IDENTIFIER,
-    AST_T_SEQUENCE
+    AST_T_OPERATOR
 } AST_TYPE;
 
 typedef struct _ast_value {
@@ -45,7 +44,8 @@ void exit_with_ast_parse_error(const char *msg);
 
 int AST_TOKEN_STARTS_EXPRESSION(TOKEN *token);
 
-AST_NODE* ast_parse_expression(AST_PARSER *parser, TOKEN *initial_token);
+AST_NODE* ast_parse(AST_PARSER *parser);
+AST_NODE* ast_parse_expression(AST_PARSER *parser);
 
 AST_NODE* ast_parse_file(const char *src_path);
 

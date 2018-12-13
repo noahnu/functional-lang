@@ -14,18 +14,10 @@ Expression ::
     | "(" <Expression> ")"
     | <Identifier>
     | <Call>
-    | <Sequence>
-    | <Infix_Operation>
+    | <Operator>
 
 Call ::
-    | <Expression> <Expression>
-
-Infix_Operation ::
-    | <Expression> <Operator> <Expression>
-    | <Numeric> <Operator> <Expression>
-    | <String> <Operator> <Expression>
-
-Sequence :: <Expression> ";" <Expression>
+    | <Expression> <Expression> ...
 
 ```
 
@@ -53,12 +45,11 @@ Sequence :: <Expression> ";" <Expression>
 
 ```
     AST_T_EXPRESSION,
-    AST_T_INFIX_OPERATION,
+    AST_T_OPERATOR,
     AST_T_NUMERIC,
     AST_T_STRING,
     AST_T_CALL,
     AST_T_IDENTIFIER,
-    AST_T_SEQUENCE,
 ```
 
 All nodes must be a descendant of an AST_T_EXPRESSION node.
@@ -67,4 +58,10 @@ All nodes must be a descendant of an AST_T_EXPRESSION node.
 
 ```
 make; ./bin/flang ./tests/test.fl | dot -Tsvg > graph.svg
+```
+
+### Examples
+
+```
+(add 1 (multiply 2 5) 3)
 ```
