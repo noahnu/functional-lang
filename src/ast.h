@@ -1,6 +1,7 @@
 
 #include <stdint.h>
 #include "./tokenizer.h"
+#include "./data_structures.h"
 
 #ifndef _H_AST_
 #define _H_AST_
@@ -25,9 +26,18 @@ typedef struct _ast_node {
     AST_TYPE            type;
     AST_VALUE           *value;
     struct _ast_node    *parent;
-    struct _ast_node    *left;
-    struct _ast_node    *right;
 } AST_NODE;
+
+typedef struct _ast_node_binary {
+    AST_NODE;
+    AST_NODE    *left;
+    AST_NODE    *right;
+} AST_BINARY_NODE;
+
+typedef struct _ast_node_nary {
+    AST_NODE;
+    LINKED_LIST_ITEM    *children;
+} AST_NARY_NODE;
 
 typedef struct _ast_parser {
     TOKEN_PARSER    *token_parser;
@@ -44,7 +54,7 @@ void exit_with_ast_parse_error(const char *msg);
 
 int AST_TOKEN_STARTS_EXPRESSION(TOKEN *token);
 
-AST_NODE* ast_parse(AST_PARSER *parser);
+AST_NODE* ast_parse_call(AST_PARSER *parser);
 AST_NODE* ast_parse_expression(AST_PARSER *parser);
 
 AST_NODE* ast_parse_file(const char *src_path);

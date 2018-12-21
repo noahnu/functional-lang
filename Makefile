@@ -1,5 +1,5 @@
 CC=gcc
-CFLAGS=-Wall
+CFLAGS=-Wall -std=gnu11
 PROGRAM=flang
 PROGRAM_SRC=cli
 

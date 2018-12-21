@@ -18,6 +18,11 @@ Expression ::
 
 Call ::
     | <Expression> <Expression> ...
+    | <Composition>
+
+Composition ::
+    | <Identifier> . <Identifier>
+    | <Call> . <Call>
 
 ```
 
