@@ -26,18 +26,10 @@ typedef struct _ast_node {
     AST_TYPE            type;
     AST_VALUE           *value;
     struct _ast_node    *parent;
+    struct _ast_node    *next;
+    struct _ast_node    *prev;
+    struct _ast_node    *children;
 } AST_NODE;
-
-typedef struct _ast_node_binary {
-    AST_NODE;
-    AST_NODE    *left;
-    AST_NODE    *right;
-} AST_BINARY_NODE;
-
-typedef struct _ast_node_nary {
-    AST_NODE;
-    LINKED_LIST_ITEM    *children;
-} AST_NARY_NODE;
 
 typedef struct _ast_parser {
     TOKEN_PARSER    *token_parser;

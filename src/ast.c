@@ -40,24 +40,13 @@ void exit_with_ast_parse_error(const char *msg)
 
 AST_NODE* ast_allocate_node(AST_TYPE type)
 {
-    void *node = NULL;
-    if (type == AST_T_CALL) {
-        node = malloc(sizeof(AST_NARY_NODE));
-        LINKED_LIST_ITEM *children = malloc(sizeof(LINKED_LIST_ITEM));
-        children->prev = NULL;
-        children->next = NULL;
-        children->value = NULL;
-        ((AST_NARY_NODE *) node)->children = children;
-    } else {
-        node = malloc(sizeof(AST_BINARY_NODE));
-        ((AST_BINARY_NODE *) node)->left = NULL;
-        ((AST_BINARY_NODE *) node)->right = NULL;
-    }
-
-    ((AST_NODE *) node)->type = type;
-    ((AST_NODE *) node)->value = NULL;
-    ((AST_NODE *) node)->parent = NULL;
-
+    AST_NODE *node = malloc(sizeof(AST_NODE));
+    node->type = type;
+    node->value = NULL;
+    node->parent = NULL;
+    node->next = NULL;
+    node->prev = NULL;
+    node->children = NULL;
     return node;
 }
 
@@ -94,38 +83,35 @@ AST_NODE* ast_parse_file(const char *src_path)
 
 AST_NODE* ast_parse_call(AST_PARSER *parser)
 {
-    AST_NARY_NODE *node = NULL;
+    AST_NODE *node = NULL;
 
     // <Callee>
     if (peak_next_token(parser) != NULL) {
-        node = (AST_NARY_NODE *) ast_allocate_node(AST_T_CALL);
-        node->children->value = (void *) ast_parse_expression(parser);
+        node = ast_allocate_node(AST_T_CALL);
+        node->children = ast_parse_expression(parser);
     } else {
         return NULL;
     }
 
     // <Right_Expression_1> <_2> <_3> ... <_n>
-    LINKED_LIST_ITEM *rightmost_child = node->children;
+    AST_NODE *rightmost_child = node->children;
     while (peak_next_token(parser) != NULL) {
         AST_NODE *node_arg = ast_parse_expression(parser);
         if (node_arg == NULL) break;
 
-        LINKED_LIST_ITEM *arg_item = malloc(sizeof(LINKED_LIST_ITEM));
-        arg_item->value = (void *) node_arg;
-        arg_item->prev = rightmost_child;
-        arg_item->next = NULL;
-        rightmost_child->next = arg_item;
-        rightmost_child = arg_item;
+        node_arg->prev = rightmost_child;
+        rightmost_child->next = node_arg;
+        rightmost_child = node_arg;
     }
 
     // No arguments.
     if (node->children->next == NULL) {
-        AST_NODE *node_function = (AST_NODE *) node->children->value;
+        AST_NODE *node_function = node->children;
         free(node);
         return node_function;
     }
 
-    return (AST_NODE *) node;
+    return node;
 }
 
 AST_NODE* ast_parse_expression(AST_PARSER *parser)
@@ -217,26 +203,13 @@ void ast_debug_node(AST_NODE *node)
     if (node_type != NULL) free(node_type);
     if (node_value != NULL) free(node_value);
 
-    if (node->type != AST_T_CALL) {
-        AST_BINARY_NODE *binary_node = ((AST_BINARY_NODE *) node);
-        if (binary_node->left != NULL) {
-            ast_debug_node(binary_node->left);
-            printf(" \"%p\" -> \"%p\" [ taillabel=\"L\" ];\n", (void *) node, (void *) binary_node->left);
-        }
-
-        if (binary_node->right != NULL) {
-            ast_debug_node(binary_node->right);
-            printf(" \"%p\" -> \"%p\" [ taillabel=\"R\" ];\n", (void *) node, (void *) binary_node->right);
-        }
-    } else {
-        AST_NARY_NODE *nary_node = (AST_NARY_NODE *) node;
-        LINKED_LIST_ITEM *nary_item = nary_node->children;
-        while (nary_item != NULL && nary_item->value != NULL) {
-            AST_NODE *child = (AST_NODE *) nary_item->value;
-            ast_debug_node(child);
-            printf(" \"%p\" -> \"%p\" ;\n", (void *) node, (void *) child);
-            nary_item = nary_item->next;
-        }
+    int pos = 0;
+    AST_NODE *child = node->children;
+    while (child != NULL) {
+        ast_debug_node(child);
+        printf(" \"%p\" -> \"%p\" [ taillabel=\"%d\" ];\n", (void *) node, (void *) child, pos);
+        child = child->next;
+        pos += 1;
     }
 }
 
