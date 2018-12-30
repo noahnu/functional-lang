@@ -28,6 +28,22 @@ int CHARSET_STRING(char c, char cc) {
     return c != '`';
 }
 
+int CHARSET_BLOCK_COMMENT(char c, char cc) {
+    return c != '*' || cc != '/';
+}
+
+int CHARSET_NEWLINE(char c, char cc) {
+    return c == '\n' || c == '\r';
+}
+
+int CHARSET_WHITESPACE(char c, char cc) {
+    return c == ' ' || c == '\t';
+}
+
+int CHARSET_LINE_COMMENT(char c, char cc) {
+    return !CHARSET_NEWLINE(c, cc);
+}
+
 int CHARSET_ANY(char c, char cc) {
     return 1;
 }

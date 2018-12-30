@@ -11,7 +11,8 @@ TOKEN_RULE *define_token_rule(
     TOKEN_TYPE type,
     TOKEN_RULE_CHARSET *open_chars,
     TOKEN_RULE_CHARSET *member_chars,
-    TOKEN_RULE_CHARSET *close_chars
+    TOKEN_RULE_CHARSET *close_chars,
+    int inclusive_boundary
 ) {
     assert(open_chars != NULL);
 
@@ -22,6 +23,7 @@ TOKEN_RULE *define_token_rule(
     rule->close_chars = close_chars;
     rule->next = NULL;
     rule->prev = NULL;
+    rule->inclusive_boundary = inclusive_boundary;
     return rule;
 }
 
@@ -65,8 +67,8 @@ int matches_token_rule_charset(
     if (chars_consumed != NULL) *chars_consumed = 0;
 
     if (charset == NULL) {
-        // Wildcard. Match but don't consume.
-        return 1;
+        // Don't match anything.
+        return 0;
     }
 
     if (charset->literals != NULL) {
@@ -117,13 +119,13 @@ void register_token_rule(TOKEN_RULE **token_rules, TOKEN_RULE *new_rule) {
 
 TOKEN_RULE* build_token_rules() {
     TOKEN_RULE_CHARSET *TK_RULE_CHARSET_NEWLINE = define_token_rule_charset(
-        (const char *[]) { "\n", "\r", "\t", NULL },
-        NULL
+        NULL,
+        (int (*[])(char, char)) { CHARSET_NEWLINE, NULL }
     );
 
     TOKEN_RULE_CHARSET *TK_RULE_CHARSET_WHITESPACE = define_token_rule_charset(
-        (const char *[]) { " ", "\n", "\r", "\t", NULL },
-        NULL
+        NULL,
+        (int (*[])(char, char)) { CHARSET_NEWLINE, CHARSET_WHITESPACE, NULL }
     );
 
     TOKEN_RULE *token_rules = NULL;
@@ -136,7 +138,8 @@ TOKEN_RULE* build_token_rules() {
         define_token_rule_charset(
             (const char *[]) { ".", 0 },
             (int (*[])(char, char)) { CHARSET_DIGIT, NULL }),
-        NULL
+        NULL,
+        1
     ));
 
     register_token_rule(&token_rules, define_token_rule(
@@ -145,14 +148,16 @@ TOKEN_RULE* build_token_rules() {
         define_token_rule_charset(
             NULL,
             (int (*[])(char, char)) { CHARSET_STRING, NULL }),
-        define_token_rule_charset((const char *[]) { "`", NULL }, NULL)
+        define_token_rule_charset((const char *[]) { "`", NULL }, NULL),
+        0
     ));
 
     register_token_rule(&token_rules, define_token_rule(
         TK_NEWLINE,
         TK_RULE_CHARSET_WHITESPACE,
         TK_RULE_CHARSET_WHITESPACE,
-        NULL
+        NULL,
+        1
     ));
 
     register_token_rule(&token_rules, define_token_rule(
@@ -163,7 +168,8 @@ TOKEN_RULE* build_token_rules() {
         define_token_rule_charset(
             NULL,
             (int (*[])(char, char)) { CHARSET_OPERATOR, NULL }),
-        NULL
+        NULL,
+        1
     ));
 
     register_token_rule(&token_rules, define_token_rule(
@@ -179,56 +185,68 @@ TOKEN_RULE* build_token_rules() {
                 NULL
             }
         ),
-        NULL
+        NULL,
+        1
     ));
 
     register_token_rule(&token_rules, define_token_rule(
         TK_PAREN_CLOSE,
         define_token_rule_charset((const char *[]) { ")", NULL }, NULL),
         NULL,
-        NULL
+        NULL,
+        0
     ));
 
     register_token_rule(&token_rules, define_token_rule(
         TK_PAREN_OPEN,
         define_token_rule_charset((const char *[]) { "(", NULL }, NULL),
         NULL,
-        NULL
+        NULL,
+        0
     ));
 
     register_token_rule(&token_rules, define_token_rule(
         TK_PARAM_CLOSE,
         define_token_rule_charset((const char *[]) { "}", NULL }, NULL),
         NULL,
-        NULL
+        NULL,
+        0
     ));
 
     register_token_rule(&token_rules, define_token_rule(
         TK_PARAM_OPEN,
         define_token_rule_charset((const char *[]) { "{", NULL }, NULL),
         NULL,
-        NULL
+        NULL,
+        0
     ));
 
     register_token_rule(&token_rules, define_token_rule(
         TK_CLOSURE,
         define_token_rule_charset((const char *[]) { "->", "=>", NULL }, NULL),
         NULL,
-        NULL
+        NULL,
+        0
     ));
 
     register_token_rule(&token_rules, define_token_rule(
         TK_LINE_COMMENT,
         define_token_rule_charset((const char *[]) { "#", NULL }, NULL),
-        NULL,
-        TK_RULE_CHARSET_NEWLINE
+        define_token_rule_charset(
+            NULL,
+            (int (*[])(char, char)) { CHARSET_LINE_COMMENT, NULL }),
+        TK_RULE_CHARSET_NEWLINE,
+        0
     ));
 
     register_token_rule(&token_rules, define_token_rule(
         TK_BLOCK_COMMENT,
         define_token_rule_charset((const char *[]) { "/*", NULL }, NULL),
-        NULL,
-        define_token_rule_charset((const char *[]) { "*/", NULL }, NULL)
+        define_token_rule_charset(
+            NULL,
+            (int (*[])(char, char)) { CHARSET_BLOCK_COMMENT, NULL }),
+        define_token_rule_charset((const char *[]) { "*/", NULL }, NULL),
+        0
     ));
 
     return token_rules;

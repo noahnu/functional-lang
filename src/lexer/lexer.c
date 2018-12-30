@@ -110,20 +110,9 @@ void lexer_consume_char(LEXER *parser, int n) {
     lexer_left_shift_char_buffer(parser, n);
 }
 
-TOKEN* lexer_read_token(LEXER *parser) {
-    TOKEN_RULE *token_rule = NULL;
-    TOKEN *token = NULL;
-
-    char c = 0;
-    char cc = 0;
-    int chars_consumed = 0;
-    int chars_consumed_open = 0;
-
-    if (!lexer_read_char_buffer(parser, &c, &cc)) return NULL;
-
-    token_rule = find_rule_by_open_chars(parser, c, cc, &chars_consumed_open);
-    token = malloc(sizeof(TOKEN));
-    token->type = token_rule->type;
+TOKEN *lexer_allocate_token(LEXER *parser, TOKEN_TYPE type) {
+    TOKEN *token = malloc(sizeof(TOKEN));
+    token->type = type;
     token->lineno = parser->current_lineno;
     token->colno = parser->current_colno;
     token->file_path = parser->current_file_path;
@@ -131,40 +120,25 @@ TOKEN* lexer_read_token(LEXER *parser) {
     token->data_len = 0;
     token->buffer = (uint8_t *) malloc(sizeof(uint8_t) * token->buffer_len);
     token->buffer[0] = 0;
+    return token;
+}
 
-    int char_pos = 0;
-    while (lexer_read_char_buffer(parser, &c, &cc)) {
-        // only use close rule on char at pos > 0.
-        int matches_close = char_pos > chars_consumed_open - 1 && matches_token_rule_charset(token_rule->close_chars, c, cc, &chars_consumed);
-        int matches_member = matches_token_rule_charset(token_rule->member_chars, c, cc, NULL);
+TOKEN* lexer_read_token(LEXER *parser) {
+    char c = 0;
+    char cc = 0;
+    if (!lexer_read_char_buffer(parser, &c, &cc)) return NULL;
 
-        // Should only match one clause.
-        if (matches_member && matches_close) {
-            // Take clause which is defined.
-            if (token_rule->member_chars == NULL && token_rule->close_chars == NULL) {
-                // Entire token is captured by open_Chars. Special case.
-                if (chars_consumed_open == 0) ASSERT_LEXER_ERROR("Expected lexer to consume char. Expectation not met.");
-                char_pos += chars_consumed_open;
-                lexer_consume_char(parser, chars_consumed_open);
-                break;
-            }
+    int chars_open = 0;
+    TOKEN_RULE *token_rule = find_rule_by_open_chars(parser, c, cc, &chars_open);
+    TOKEN *token = lexer_allocate_token(parser, token_rule->type);
 
-            if (token_rule->member_chars == NULL) {
-                matches_member = 0;
-            } else if (token_rule->close_chars == NULL) {
-                matches_close = 0;
-            }
-        }
+    if (!token_rule->inclusive_boundary) {
+        // skip open characters
+        lexer_consume_char(parser, chars_open);
+    }
 
-        if (!matches_close && c == 0) ASSERT_LEXER_ERROR("Reached EOF while parsing token.");
-
-        if (matches_member) {
-            // Always consume 1 char at a time even if the subsequent character is
-            // required to match the member char. E.g. Match all backslashes followed by
-            // a question mark, but don't actually match the question mark.
-            char_pos += 1;
-            lexer_consume_char(parser, 1);
-
+    while (token_rule->member_chars != NULL && lexer_read_char_buffer(parser, &c, &cc)) {
+        if (matches_token_rule_charset(token_rule->member_chars, c, cc, NULL)) {
             token->buffer[token->data_len++] = c;
             if (token->data_len >= token->buffer_len) {
                 token->buffer_len *= 2;
@@ -174,23 +148,18 @@ TOKEN* lexer_read_token(LEXER *parser) {
                 }
             }
             token->buffer[token->data_len] = 0;
-        }
-
-        if (matches_close) {
-            if (!matches_member) {
-                if (chars_consumed == 0) ASSERT_LEXER_ERROR("Did not consume closing char.");
-                char_pos += chars_consumed;
-                lexer_consume_char(parser, chars_consumed);
-            }
-            break;
-        }
-
-        if (!matches_close && !matches_member) {
-            // probably the opening character, consume and skip.
-            char_pos += chars_consumed_open;
-            lexer_consume_char(parser, chars_consumed_open);
+            lexer_consume_char(parser, 1);
+            continue;
         }
         
+        int chars_closed = 0;
+        if (matches_token_rule_charset(token_rule->close_chars, c, cc, &chars_closed)) {
+            lexer_consume_char(parser, chars_closed);
+        }
+
+        // don't understand char in context of
+        // current rule, let next rule deal with it
+        break;
     }
 
     return token;

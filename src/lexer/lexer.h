@@ -46,6 +46,7 @@ TOKEN_RULE *find_rule_by_open_chars(
 void lexer_left_shift_char_buffer(LEXER *parser, int n);
 void lexer_consume_char(LEXER *parser, int n);
 int TOKEN_LACKS_SEMANTIC_MEANING(TOKEN_TYPE type);
+TOKEN *lexer_allocate_token(LEXER *parser, TOKEN_TYPE type);
 
 TOKEN* lexer_read_token(LEXER *parser);
 void lexer_read_src(LEXER *parser, const char *src_path);
