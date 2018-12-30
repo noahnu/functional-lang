@@ -21,14 +21,12 @@ char *lexer_token_type_to_name(TOKEN_TYPE type)
             return strdup("PAREN_OPEN");
         case TK_PAREN_CLOSE:
             return strdup("PAREN_CLOSE");
-        case TK_PARAM_OPEN:
+        case TK_OBJECT_OPEN:
             return strdup("PARAM_OPEN");
-        case TK_PARAM_CLOSE:
+        case TK_OBJECT_CLOSE:
             return strdup("PARAM_CLOSE");
         case TK_CLOSURE:
             return strdup("CLOSURE");
-        case TK_OPERATOR:
-            return strdup("OPERATOR");
         case TK_NUMERIC:
             return strdup("NUMERIC");
         default:
@@ -44,7 +42,6 @@ char *lexer_token_value_to_str(TOKEN_TYPE type, uint8_t *value)
             return strdup("<NEWLINE>");
         case TK_STRING:
         case TK_IDENTIFIER:
-        case TK_OPERATOR:
         case TK_NUMERIC:
         case TK_LINE_COMMENT:
             return strdup((const char *) value);

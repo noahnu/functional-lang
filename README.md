@@ -4,7 +4,7 @@
 Letter :: <A - Z> | <a - z>
 Digit :: <0 - 9>
 
-Identifier :: (<Letter> | "_") [<Digit>] [<Identifier>]
+Identifier :: (<Letter> | "_") [<Digit>] [<Operator>] [<Identifier>]
 
 Operator :: "+" | "-" | "/" | "*"
 
@@ -14,7 +14,6 @@ Expression ::
     | "(" <Expression> ")"
     | <Identifier>
     | <Call>
-    | <Operator>
     | <Function Definition>
 
 Call ::
@@ -35,11 +34,10 @@ Closure ::
 ```
     TK_PAREN_OPEN,
     TK_PAREN_CLOSE,
-    TK_PARAM_OPEN,
-    TK_PARAM_CLOSE,
+    TK_OBJECT_OPEN,
+    TK_OBJECT_CLOSE,
     TK_IDENTIFIER,
     TK_NUMERIC,
-    TK_OPERATOR,
     TK_CLOSURE,
     TK_NEWLINE,
     TK_STRING,
@@ -54,7 +52,6 @@ Closure ::
 
 ```
     AST_T_EXPRESSION,
-    AST_T_OPERATOR,
     AST_T_NUMERIC,
     AST_T_STRING,
     AST_T_CALL,

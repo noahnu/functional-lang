@@ -118,7 +118,7 @@ AST_NODE *ast_transform_subexpression(AST_PARSER *parser, AST_NODE *subexpressio
     }
 
     TOKEN *peak_token = peak_next_token(parser);
-    if (peak_token->type != TK_PARAM_OPEN && peak_token->type != TK_CLOSURE) {
+    if (peak_token->type != TK_OBJECT_OPEN && peak_token->type != TK_CLOSURE) {
         return subexpression;
     }
 
@@ -128,9 +128,9 @@ AST_NODE *ast_transform_subexpression(AST_PARSER *parser, AST_NODE *subexpressio
     subexpression->closure = NULL; // no need to keep link since this is a function def.
     closure->children = subexpression; // <Identifier>
 
-    AST_NODE *param_list = ast_allocate_node(AST_T_PARAM_LIST);
+    AST_NODE *param_list = ast_allocate_node(AST_T_OBJECT);
     subexpression->next = param_list;
-    if (peak_token->type == TK_PARAM_OPEN) {
+    if (peak_token->type == TK_OBJECT_OPEN) {
         param_list->rel_token = get_next_token(parser); // consume "{"
         AST_NODE *rightmost_child = param_list->children;
         while (peak_next_token(parser) != NULL) {

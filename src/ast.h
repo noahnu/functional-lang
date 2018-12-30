@@ -11,8 +11,7 @@ typedef enum {
     AST_T_STRING,
     AST_T_CALL,
     AST_T_IDENTIFIER,
-    AST_T_OPERATOR,
-    AST_T_PARAM_LIST,
+    AST_T_OBJECT,
     AST_T_CLOSURE
 } AST_TYPE;
 

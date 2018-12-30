@@ -1,7 +1,7 @@
 (print (
     (add_1_double { x } -> (
-        (double { x } -> (multiple x 2))
-        (add x 1)
+        (double { x } -> (* x 2))
+        (+ x 1)
     ))
     5
 ))

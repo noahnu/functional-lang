@@ -20,8 +20,8 @@ char *ast_debug_type_to_name(AST_TYPE type)
             return strdup("CALL");
         case AST_T_IDENTIFIER:
             return strdup("IDENTIFIER");
-        case AST_T_PARAM_LIST:
-            return strdup("PARAM_LIST");
+        case AST_T_OBJECT:
+            return strdup("OBJECT");
         case AST_T_CLOSURE:
             return strdup("CLOSURE");
         case AST_T_STRING:

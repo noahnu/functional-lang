@@ -161,27 +161,20 @@ TOKEN_RULE* build_token_rules() {
     ));
 
     register_token_rule(&token_rules, define_token_rule(
-        TK_OPERATOR,
-        define_token_rule_charset(
-            NULL,
-            (int (*[])(char, char)) { CHARSET_OPERATOR, NULL }),
-        define_token_rule_charset(
-            NULL,
-            (int (*[])(char, char)) { CHARSET_OPERATOR, NULL }),
-        NULL,
-        1
-    ));
-
-    register_token_rule(&token_rules, define_token_rule(
         TK_IDENTIFIER,
         define_token_rule_charset(
             (const char *[]) { "_", "$", NULL },
-            (int (*[])(char, char)) { CHARSET_ALPHA, NULL }),
+            (int (*[])(char, char)) {
+                CHARSET_ALPHA,
+                CHARSET_OPERATOR,
+                NULL
+            }),
         define_token_rule_charset(
             (const char *[]) { "_", "$", NULL },
             (int (*[])(char, char)) {
                 CHARSET_ALPHA,
                 CHARSET_DIGIT,
+                CHARSET_OPERATOR,
                 NULL
             }
         ),
@@ -206,7 +199,7 @@ TOKEN_RULE* build_token_rules() {
     ));
 
     register_token_rule(&token_rules, define_token_rule(
-        TK_PARAM_CLOSE,
+        TK_OBJECT_CLOSE,
         define_token_rule_charset((const char *[]) { "}", NULL }, NULL),
         NULL,
         NULL,
@@ -214,7 +207,7 @@ TOKEN_RULE* build_token_rules() {
     ));
 
     register_token_rule(&token_rules, define_token_rule(
-        TK_PARAM_OPEN,
+        TK_OBJECT_OPEN,
         define_token_rule_charset((const char *[]) { "{", NULL }, NULL),
         NULL,
         NULL,
