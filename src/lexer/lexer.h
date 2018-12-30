@@ -1,3 +1,5 @@
+#include <stdbool.h>
+
 #include "./token_types.h"
 #include "./rules.h"
 
@@ -36,7 +38,7 @@ void PRINT_LEXER_ERROR(LEXER *parser, const char *message);
 
 void lexer_free_token(TOKEN *token);
 void lexer_populate_char_buffer(LEXER *parser);
-int lexer_read_char_buffer(LEXER *parser, char *c, char *cc);
+bool lexer_read_char_buffer(LEXER *parser, char *c, char *cc);
 TOKEN_RULE *find_rule_by_open_chars(
     LEXER *parser,
     char c,
@@ -45,7 +47,7 @@ TOKEN_RULE *find_rule_by_open_chars(
 );
 void lexer_left_shift_char_buffer(LEXER *parser, int n);
 void lexer_consume_char(LEXER *parser, int n);
-int TOKEN_LACKS_SEMANTIC_MEANING(TOKEN_TYPE type);
+bool TOKEN_LACKS_SEMANTIC_MEANING(TOKEN_TYPE type);
 TOKEN *lexer_allocate_token(LEXER *parser, TOKEN_TYPE type);
 
 TOKEN* lexer_read_token(LEXER *parser);

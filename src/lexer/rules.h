@@ -1,3 +1,4 @@
+#include <stdbool.h>
 #include "./token_types.h"
 
 #ifndef _H_RULES_
@@ -23,7 +24,7 @@ TOKEN_RULE *define_token_rule(
     TOKEN_RULE_CHARSET *open_chars,
     TOKEN_RULE_CHARSET *member_chars,
     TOKEN_RULE_CHARSET *close_chars,
-    int inclusive_boundary
+    bool inclusive_boundary
 );
 
 TOKEN_RULE_CHARSET *define_token_rule_charset(
@@ -31,7 +32,7 @@ TOKEN_RULE_CHARSET *define_token_rule_charset(
     int (**matchers)(char, char)
 );
 
-int matches_token_rule_charset(
+bool matches_token_rule_charset(
     TOKEN_RULE_CHARSET *charset,
     char c,
     char cc,

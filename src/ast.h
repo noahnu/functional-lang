@@ -45,8 +45,6 @@ AST_NODE* ast_token_to_leaf_node(TOKEN *token);
 
 void exit_with_ast_parse_error(const char *msg);
 
-int AST_TOKEN_STARTS_EXPRESSION(TOKEN *token);
-
 AST_NODE *ast_transform_subexpression(AST_PARSER *parser, AST_NODE *subexpression);
 AST_NODE* ast_parse_subexpression(AST_PARSER *parser, AST_NODE *closure);
 AST_NODE* ast_parse_expression(AST_PARSER *parser, AST_NODE *closure);

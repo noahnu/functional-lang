@@ -1,6 +1,7 @@
 #include <stdlib.h>
 #include <assert.h>
 #include <stdio.h>
+#include <stdbool.h>
 
 #include "./lexer.h"
 #include "./rules.h"
@@ -37,10 +38,10 @@ void lexer_populate_char_buffer(LEXER *parser) {
     }
 }
 
-int lexer_read_char_buffer(LEXER *parser, char *c, char *cc) {
+bool lexer_read_char_buffer(LEXER *parser, char *c, char *cc) {
     lexer_populate_char_buffer(parser);
 
-    if (!parser->char_buffer_n) return 0;
+    if (!parser->char_buffer_n) return false;
 
     *c = 0;
     *cc = 0;
@@ -48,7 +49,7 @@ int lexer_read_char_buffer(LEXER *parser, char *c, char *cc) {
     if (parser->char_buffer_n) *c = parser->char_buffer[0];
     if (parser->char_buffer_n > 1) *cc = parser->char_buffer[1];
 
-    return 1;
+    return true;
 }
 
 TOKEN_RULE *find_rule_by_open_chars(
@@ -165,7 +166,7 @@ TOKEN* lexer_read_token(LEXER *parser) {
     return token;
 }
 
-int TOKEN_LACKS_SEMANTIC_MEANING(TOKEN_TYPE type) {
+bool TOKEN_LACKS_SEMANTIC_MEANING(TOKEN_TYPE type) {
     return type == TK_BLOCK_COMMENT || type == TK_NEWLINE || type == TK_LINE_COMMENT;
 }
 
