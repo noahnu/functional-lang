@@ -5,27 +5,20 @@
 #include <stdint.h>
 
 #include "./ast.h"
-#include "./tokenizer.h"
-#include "./data_structures.h"
-
+#include "./lexer/token_types.h"
+#include "./lexer/lexer.h"
 
 TOKEN* peak_next_token(AST_PARSER *parser)
 {
-    LINKED_LIST_ITEM *token_cur = parser->token_parser->token_cur;
-    if (token_cur != NULL) {
-        return (TOKEN *) token_cur->value;
-    }
-    return NULL;
+    return parser->token_parser->token_cur;
 }
 
 TOKEN* get_next_token(AST_PARSER *parser)
 {
-    LINKED_LIST_ITEM *token_item = NULL;
     TOKEN *token = NULL;
     if (parser->token_parser->token_cur != NULL) {
-        token_item = parser->token_parser->token_cur;
+        token = parser->token_parser->token_cur;
         parser->token_parser->token_cur = parser->token_parser->token_cur->next;
-        token = (TOKEN *) token_item->value;
         return token;
     }
     return NULL;
@@ -47,6 +40,8 @@ AST_NODE* ast_allocate_node(AST_TYPE type)
     node->next = NULL;
     node->prev = NULL;
     node->children = NULL;
+    node->rel_token = NULL;
+    node->closure = NULL;
     return node;
 }
 
@@ -71,37 +66,40 @@ AST_PARSER* ast_init_parser()
 AST_NODE* ast_parse_file(const char *src_path)
 {
     AST_PARSER *ast_parser = ast_init_parser();
-    ast_parser->token_parser = tokenizer_init_parser(src_path);
+    ast_parser->token_parser = lexer_init_parser(src_path);
 
     AST_NODE *ast_root = NULL;
     TOKEN *initial_token = peak_next_token(ast_parser);
     if (initial_token != NULL) {
-        ast_root = ast_parse_expression(ast_parser);
+        ast_root = ast_parse_expression(ast_parser, NULL);
     }
     return ast_root;
 }
 
-AST_NODE* ast_parse_call(AST_PARSER *parser)
+AST_NODE* ast_parse_subexpression(AST_PARSER *parser, AST_NODE *closure)
 {
     AST_NODE *node = NULL;
 
-    // <Callee>
+    // <Callee> | <Identifier>
     if (peak_next_token(parser) != NULL) {
         node = ast_allocate_node(AST_T_CALL);
-        node->children = ast_parse_expression(parser);
+        node->children = ast_parse_expression(parser, closure);
     } else {
         return NULL;
     }
 
-    // <Right_Expression_1> <_2> <_3> ... <_n>
-    AST_NODE *rightmost_child = node->children;
-    while (peak_next_token(parser) != NULL) {
-        AST_NODE *node_arg = ast_parse_expression(parser);
-        if (node_arg == NULL) break;
+    TOKEN *peak_token = peak_next_token(parser);
+    if (peak_token != NULL) {
+        // <Right_Expression_1> <_2> <_3> ... <_n>
+        AST_NODE *rightmost_child = node->children;
+        while (peak_next_token(parser) != NULL) {
+            AST_NODE *node_arg = ast_parse_expression(parser, closure);
+            if (node_arg == NULL) break;
 
-        node_arg->prev = rightmost_child;
-        rightmost_child->next = node_arg;
-        rightmost_child = node_arg;
+            node_arg->prev = rightmost_child;
+            rightmost_child->next = node_arg;
+            rightmost_child = node_arg;
+        }
     }
 
     // No arguments.
@@ -114,25 +112,77 @@ AST_NODE* ast_parse_call(AST_PARSER *parser)
     return node;
 }
 
-AST_NODE* ast_parse_expression(AST_PARSER *parser)
+AST_NODE *ast_transform_subexpression(AST_PARSER *parser, AST_NODE *subexpression) {
+    if (subexpression == NULL || subexpression->type != AST_T_IDENTIFIER) {
+        return subexpression;
+    }
+
+    TOKEN *peak_token = peak_next_token(parser);
+    if (peak_token->type != TK_PARAM_OPEN && peak_token->type != TK_CLOSURE) {
+        return subexpression;
+    }
+
+    // Children: [<Identifier>, <Param List>, <Body Expression>]
+    AST_NODE *closure = ast_allocate_node(AST_T_CLOSURE);
+    closure->closure = subexpression->closure; // parent closure from original subexpression
+    subexpression->closure = NULL; // no need to keep link since this is a function def.
+    closure->children = subexpression; // <Identifier>
+
+    AST_NODE *param_list = ast_allocate_node(AST_T_PARAM_LIST);
+    subexpression->next = param_list;
+    if (peak_token->type == TK_PARAM_OPEN) {
+        param_list->rel_token = get_next_token(parser); // consume "{"
+        AST_NODE *rightmost_child = param_list->children;
+        while (peak_next_token(parser) != NULL) {
+            AST_NODE *node_arg = ast_parse_expression(parser, NULL);
+            if (node_arg == NULL) break;
+            if (node_arg->type != AST_T_IDENTIFIER) {
+                exit_with_ast_parse_error("Only identifiers allowed in closure argument list.");
+            }
+
+            node_arg->prev = rightmost_child;
+            if (rightmost_child != NULL) {
+                rightmost_child->next = node_arg;
+            } else {
+                param_list->children = node_arg;
+            }
+            rightmost_child = node_arg;
+        }
+        get_next_token(parser); // consume "}"
+    }
+
+    peak_token = peak_next_token(parser);
+    if (peak_token->type != TK_CLOSURE) {
+        exit_with_ast_parse_error("Expected '->' in closure definition.");
+    }
+
+    get_next_token(parser); // consume '->'
+    param_list->next = ast_parse_expression(parser, closure); // <Body Expr>
+
+    return closure;
+}
+
+AST_NODE* ast_parse_expression(AST_PARSER *parser, AST_NODE *closure)
 {
-    TOKEN *peaked_token = peak_next_token(parser);
-    TOKEN_TYPE token_type = peaked_token->type;
+    TOKEN *peak_token = peak_next_token(parser);
 
     // Base cases: Leaf nodes of AST
     if (
-        token_type == TK_IDENTIFIER ||
-        token_type == TK_STRING ||
-        token_type == TK_NUMERIC
+        peak_token->type == TK_IDENTIFIER ||
+        peak_token->type == TK_STRING ||
+        peak_token->type == TK_NUMERIC
     ) {
-        return ast_token_to_leaf_node(get_next_token(parser));
+        AST_NODE *node = ast_token_to_leaf_node(get_next_token(parser));
+        node->closure = closure;
+        return node;
     }
 
     // "(" <Expression> ")"
-    if (token_type == TK_PAREN_OPEN) {
+    if (peak_token->type == TK_PAREN_OPEN) {
         get_next_token(parser); // consume "("
-        AST_NODE *sub_expression = ast_parse_call(parser);
-        TOKEN *peak_token = peak_next_token(parser);
+        AST_NODE *sub_expression = ast_parse_subexpression(parser, closure);
+        sub_expression = ast_transform_subexpression(parser, sub_expression);
+        peak_token = peak_next_token(parser);
         if (peak_token == NULL || peak_token->type != TK_PAREN_CLOSE) {
             exit_with_ast_parse_error("Expected closing ')'.");
         }
@@ -161,61 +211,7 @@ AST_NODE* ast_token_to_leaf_node(TOKEN *token)
             return NULL;
     }
 
-    node->value = ast_allocate_node_value_from_str((const char *) token->value);
+    node->rel_token = token;
+    node->value = ast_allocate_node_value_from_str((const char *) token->buffer);
     return node;
-}
-
-// DEBUG functions
-
-char *ast_debug_type_to_name(AST_TYPE type)
-{
-    switch (type) {
-        case AST_T_EXPRESSION:
-            return strdup("EXPRESSION");
-        case AST_T_NUMERIC:
-            return strdup("NUMERIC");
-        case AST_T_CALL:
-            return strdup("CALL");
-        case AST_T_IDENTIFIER:
-            return strdup("IDENTIFIER");
-        default:
-            return strdup("UNKNOWN_TYPE");
-    }
-}
-
-char *ast_debug_node_value_to_str(AST_TYPE type, AST_VALUE *value)
-{
-    if (value == NULL || value->buffer == NULL) {
-        return NULL;
-    }
-    return strdup((const char *) value->buffer);
-}
-
-void ast_debug_node(AST_NODE *node)
-{
-    char *node_type = ast_debug_type_to_name(node->type);
-    char *node_value = ast_debug_node_value_to_str(node->type, node->value);
-    printf(" \"%p\" [ label=\"%s", (void *) node, node_type);
-    if (node_value != NULL) {
-        printf(": %s", node_value);
-    }
-    printf("\"];\n");
-    if (node_type != NULL) free(node_type);
-    if (node_value != NULL) free(node_value);
-
-    int pos = 0;
-    AST_NODE *child = node->children;
-    while (child != NULL) {
-        ast_debug_node(child);
-        printf(" \"%p\" -> \"%p\" [ taillabel=\"%d\" ];\n", (void *) node, (void *) child, pos);
-        child = child->next;
-        pos += 1;
-    }
-}
-
-void ast_debug_graph(AST_NODE *root)
-{
-    printf("digraph {\n");
-    ast_debug_node(root);
-    printf("}\n");
 }

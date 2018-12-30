@@ -1,11 +1,9 @@
 
 #include <stdint.h>
-#include "./tokenizer.h"
-#include "./data_structures.h"
+#include "./lexer/lexer.h"
 
 #ifndef _H_AST_
 #define _H_AST_
-
 
 typedef enum {
     AST_T_EXPRESSION,
@@ -13,7 +11,9 @@ typedef enum {
     AST_T_STRING,
     AST_T_CALL,
     AST_T_IDENTIFIER,
-    AST_T_OPERATOR
+    AST_T_OPERATOR,
+    AST_T_PARAM_LIST,
+    AST_T_CLOSURE
 } AST_TYPE;
 
 typedef struct _ast_value {
@@ -29,10 +29,12 @@ typedef struct _ast_node {
     struct _ast_node    *next;
     struct _ast_node    *prev;
     struct _ast_node    *children;
+    struct _ast_node    *closure;
+    TOKEN               *rel_token;
 } AST_NODE;
 
 typedef struct _ast_parser {
-    TOKEN_PARSER    *token_parser;
+    LEXER    *token_parser;
 } AST_PARSER;
 
 TOKEN *peak_next_token(AST_PARSER *parser);
@@ -46,15 +48,10 @@ void exit_with_ast_parse_error(const char *msg);
 
 int AST_TOKEN_STARTS_EXPRESSION(TOKEN *token);
 
-AST_NODE* ast_parse_call(AST_PARSER *parser);
-AST_NODE* ast_parse_expression(AST_PARSER *parser);
+AST_NODE *ast_transform_subexpression(AST_PARSER *parser, AST_NODE *subexpression);
+AST_NODE* ast_parse_subexpression(AST_PARSER *parser, AST_NODE *closure);
+AST_NODE* ast_parse_expression(AST_PARSER *parser, AST_NODE *closure);
 
 AST_NODE* ast_parse_file(const char *src_path);
-
-char *ast_debug_type_to_name(AST_TYPE type);
-char *ast_debug_node_value_to_str(AST_TYPE type, AST_VALUE *value);
-
-void ast_debug_node(AST_NODE *node);
-void ast_debug_graph(AST_NODE *root);
 
 #endif

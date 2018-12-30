@@ -5,3 +5,5 @@ obj
 *.stackdump
 *.tmp
 *.tmp.svg
+
+.vscode

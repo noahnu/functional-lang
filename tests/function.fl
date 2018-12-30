@@ -1,0 +1,6 @@
+/* Creates a function "double" and immediately
+ * calls it with the argument x=5. Should print 10. */
+(print `Double 5 is:` (
+    (double { x } -> (multiple x 2))
+    5
+))

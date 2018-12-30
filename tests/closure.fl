@@ -1,0 +1,8 @@
+(print (
+    (add_1_double { x } -> (
+        (double { x } -> (multiple x 2))
+        (add x 1)
+    ))
+    5
+))
+# expected output if correct: '12', if incorrect: 10

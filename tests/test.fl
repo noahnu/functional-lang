@@ -1,1 +1,6 @@
-(add 1 (multiply 2 5) 3)
+# Test of nested expressions.
+(
+    /* This is a block comment
+     * spanning multiple lines. */
+    add 1 2 (multiply 2 5) 3
+)

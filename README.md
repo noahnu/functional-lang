@@ -6,7 +6,7 @@ Digit :: <0 - 9>
 
 Identifier :: (<Letter> | "_") [<Digit>] [<Identifier>]
 
-Operator :: "+" | "-" | "/" | "*" | "->"
+Operator :: "+" | "-" | "/" | "*"
 
 Expression ::
     | <Numeric>
@@ -15,14 +15,16 @@ Expression ::
     | <Identifier>
     | <Call>
     | <Operator>
+    | <Function Definition>
 
 Call ::
     | <Expression> <Expression> ...
-    | <Composition>
 
-Composition ::
-    | <Identifier> . <Identifier>
-    | <Call> . <Call>
+Param List ::
+    | "{" <Identifier> ... "}"
+
+Closure ::
+    | <Identifier> [<Param List>] "->" <Expression> 
 
 ```
 
@@ -33,14 +35,16 @@ Composition ::
 ```
     TK_PAREN_OPEN,
     TK_PAREN_CLOSE,
+    TK_PARAM_OPEN,
+    TK_PARAM_CLOSE,
     TK_IDENTIFIER,
     TK_NUMERIC,
     TK_OPERATOR,
+    TK_CLOSURE,
     TK_NEWLINE,
     TK_STRING,
     TK_BLOCK_COMMENT,
     TK_LINE_COMMENT,
-    TK_SEQUENCE,
     TK_UNSET,
 ```
 
@@ -68,5 +72,19 @@ make; ./bin/flang ./tests/test.fl | dot -Tsvg > graph.svg
 ### Examples
 
 ```
-(add 1 (multiply 2 5) 3)
+# Test of nested expressions.
+(
+    /* This is a block comment
+     * spanning multiple lines. */
+    add 1 2 (multiply 2 5) 3
+)
+```
+
+```
+/* Creates a function "double" and immediately
+ * calls it with the argument x=5. Should print 10. */
+(print (
+    (double { x } -> (multiple x 2))
+    5
+))
 ```
