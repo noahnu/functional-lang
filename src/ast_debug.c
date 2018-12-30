@@ -24,6 +24,8 @@ char *ast_debug_type_to_name(AST_TYPE type)
             return strdup("PARAM_LIST");
         case AST_T_CLOSURE:
             return strdup("CLOSURE");
+        case AST_T_STRING:
+            return strdup("STRING");
         default:
             return strdup("UNKNOWN_TYPE");
     }
