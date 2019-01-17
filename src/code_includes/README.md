@@ -1,0 +1,1 @@
+Contains source code that can be linked in the final compiled program. There should be no references outside of this directory.

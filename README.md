@@ -63,7 +63,7 @@ All nodes must be a descendant of an AST_T_EXPRESSION node.
 ### Visualization of AST
 
 ```
-make; ./bin/flang ./tests/test.fl | dot -Tsvg > graph.svg
+make ast-graphs
 ```
 
 ### Examples
