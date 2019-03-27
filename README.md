@@ -4,7 +4,7 @@
 Letter :: <A - Z> | <a - z>
 Digit :: <0 - 9>
 
-Identifier :: (<Letter> | "_") [<Digit>] [<Operator>] [<Identifier>]
+Identifier :: (<Letter> | "_") [<Digit>] [<Identifier>]
 
 Operator :: "+" | "-" | "/" | "*"
 

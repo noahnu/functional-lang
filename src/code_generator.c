@@ -3,33 +3,79 @@
 #include <errno.h>
 #include <string.h>
 #include <stdint.h>
+#include <stdarg.h>
 
 #include "./ast.h"
 #include "./code_generator.h"
+#include "code_includes/fl_directives.h"
 
-// TODO:
-// - Create a "closure" (gets a unique name connected to identifier and lexical scope)
-// - Append instructions to the closure.
-// TODO: must be some way to translate the closure to actual source code or assembly.
-// essentially below function will flatten the AST
+void cg_append_line(CG_SOURCE_CODE *code, const char *line, ...) {
+    va_list args;
+    va_start(args, line);
+    vfprintf(code->output_file, line, args);
+    fprint(code->output_file, "\n");
+    va_end(args);
+}
 
-CG_CLOSURE *cg_init_closure(AST_NODE *node_closure) {
-    CG_CLOSURE *cg_closure = malloc(sizeof(CG_CLOSURE));
-    cg_closure->parent = NULL;
-    cg_closure->variables = NULL;
-    cg_closure->body = NULL;
-    return cg_closure;
+void cg_visit_closure(CG_SOURCE_CODE *code, AST_NODE *node) {
+    /*
+
+    _FL_SYMBOL_TABLE* ${_FL_S_CLOSURE_PREFIX}_${node::int} (_FL_OBJECT_STRUCT object) {
+        _FL_SYMBOL_TABLE symbols = _FL_S_INIT_SYMBOL_TABLE();
+
+        return _FL_SYMBOL_TABLE* or NULL;
+    }
+
+    */
+
+    cg_append_line(code, "void ##_FL_CLOSURE_PREFIX##_%d (##_FL_OBJECT_STRUCT## *object) {", node);
+    cg_append_line(code, "\t" "_FL_SYMBOL_TABLE symbols = _FL_S_INIT_SYMBOL_TABLE();");
+
+    // AST_NODE *child = NULL;
+    // while ((child = ) != NULL) {
+
+    // }
+
+    // for (children_closures in node) {
+    //     cg_append_line(code, "\t" "insert_symbol(&symbols, \"%s\", %d);", );
+    // }
+
+    // potential calls here...
+
+    cg_append_line(code, "}");
+}
+
+void cg_visit_call(CG_SOURCE_CODE *code, AST_NODE *node) {
+    /*
+
+    _FL_OBJECT_STRUCT object = _FL_S_INIT_OBJECT_STRUCT();
+    // populate object from args, potentially from return value of call
+
+    ${_FL_S_CLOSURE_PREFIX}_${node_closure::int}(object);
+
+    */
 }
 
 void ast_node_to_source_code(CG_SOURCE_CODE *code, AST_NODE *node) {
-    if (node->type == AST_T_CLOSURE) {
-        CG_CLOSURE *closure = cg_init_closure(node);
-        cg_code_add_closure(code, closure);
-    }
-}
+    void (*cg_node_visitor)(CG_SOURCE_CODE*,AST_NODE*) = NULL;
 
-void cg_code_add_closure(CG_SOURCE_CODE *code, CG_CLOSURE *closure) {
-    // TODO: add closure to linked list
+    switch (node->type) {
+        case AST_T_CALL:
+            cg_node_visitor = cg_visit_call;
+            break;
+        case AST_T_CLOSURE:
+            cg_node_visitor = cg_visit_closure;
+            break;
+        default:
+            cg_node_visitor = NULL;
+    }
+
+    if (cg_node_visitor == NULL) {
+        fprintf(stderr, "Missing visitor function.\n");
+        exit(EXIT_FAILURE);
+    }
+
+    cg_node_visitor(code, node);
 }
 
 CG_SOURCE_CODE *cg_init_source_code() {
