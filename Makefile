@@ -9,8 +9,8 @@ TMP_DIR=./tmp
 EXAMPLES_DIR=./examples
 EXEC=$(BIN_DIR)/$(PROGRAM)
 
-FILES=ast ast_debug lexer/charsets lexer/debug lexer/lexer lexer/rules
-HEADER_ONLY=lexer/token_types
+FILES=linked_list ast ast_debug lexer/charsets lexer/debug lexer/lexer lexer/rules code_generator
+HEADER_ONLY=lexer/token_types logging
 OBJECT_ONLY=cli
 
 DEPS=$(FILES:%=$(SRC_DIR)/%.h) $(HEADER_ONLY:%=$(SRC_DIR)/%.h)

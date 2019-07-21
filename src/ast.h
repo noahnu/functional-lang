@@ -51,4 +51,11 @@ AST_NODE* ast_parse_expression(AST_PARSER *parser, AST_NODE *closure);
 
 AST_NODE* ast_parse_file(const char *src_path);
 
+int IS_AST_T_EXPRESSION(AST_NODE *node);
+int IS_AST_T_CALL(AST_NODE *node);
+int IS_AST_T_OBJECT(AST_NODE *node);
+int IS_AST_T_CLOSURE(AST_NODE *node);
+
+int ast_children_len(AST_NODE *node);
+
 #endif

@@ -34,28 +34,23 @@ typedef struct _statement {
     // TODO: args..
 } CG_STATEMENT;
 
-
-
-
-
-
-
-
-
 typedef struct _closure_frame {
-    uint32_t        *parent;
+    uint32_t                *parent;
     CG_VARIABLE             *variables;
     CG_STATEMENT            *body;
 } CG_CLOSURE;
-
-
-
-
 
 void generate_source_code(
     const char *output_path, 
     AST_NODE *ast_root,
     SOURCE_CODE_OPTS *opts
+);
+
+void visit_node(
+    CG_SOURCE_CODE *code,
+    AST_NODE *root,
+    int (*predicate)(AST_NODE*),
+    void (*node_visitor)(CG_SOURCE_CODE*, AST_NODE*)
 );
 
 #endif

@@ -8,6 +8,30 @@
 #include "./lexer/token_types.h"
 #include "./lexer/lexer.h"
 
+int IS_AST_T_EXPRESSION(AST_NODE *node) {
+    return node->type == AST_T_EXPRESSION;
+}
+int IS_AST_T_CALL(AST_NODE *node) {
+    return node->type == AST_T_CALL;
+}
+int IS_AST_T_OBJECT(AST_NODE *node) {
+    return node->type == AST_T_OBJECT;
+}
+int IS_AST_T_CLOSURE(AST_NODE *node) {
+    return node->type == AST_T_CLOSURE;
+}
+
+int ast_children_len(AST_NODE *node) {
+    int n = 0;
+    AST_NODE *cur = node->children;
+    while (cur != NULL) {
+        n++;
+        cur = cur->next;
+    }
+    return n;
+}
+
+
 TOKEN* peak_next_token(AST_PARSER *parser)
 {
     return parser->token_parser->token_cur;

@@ -8,6 +8,10 @@ Identifier :: (<Letter> | "_") [<Digit>] [<Identifier>]
 
 Operator :: "+" | "-" | "/" | "*"
 
+Numeric :: <Digit> ...
+
+String :: """ [^"""] ... """
+
 Expression ::
     | <Numeric>
     | <String>
